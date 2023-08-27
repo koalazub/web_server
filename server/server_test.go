@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 )
-
+//
 func TestNew(t *testing.T) {
 	got := New()
 	want := &Server{
