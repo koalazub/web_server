@@ -15,13 +15,7 @@
       ];
       perSystem = {pkgs, system, self', inputs', config, ... }: {
         devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            go 
-            gopls 
-            go-tools 
-            gotools 
-            nodePackages_latest.yaml-language-server
-          ];
+          nativeBuildInputs = with pkgs; [go gopls go-tools gotools];
           shellHook = ''
             exec $SHELL;
             ''; 
