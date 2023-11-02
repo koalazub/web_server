@@ -1,71 +1,116 @@
 package api
 
 import (
-	"io"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"os"
 
 	"golang.org/x/exp/slog"
 )
 
 type LaunchServer struct {
-	launches map[string]LaunchSpecs
+	launches map[string]CustomLaunchData
+}
+
+type Reddit struct {
+	Campaign interface{} `json:"campaign"`
+	Launch   interface{} `json:"launch"`
+	Media    interface{} `json:"media"`
+}
+type Links struct {
+	Reddit Reddit
 }
 
 // just the basics for now and then we'll see if we can elaborate more.
 // Specs need to be updated from map[string]interface{} at some point
-type LaunchSpecs struct {
-	Fairings string                 `json:"fairings"`
-	Links    map[string]interface{} `json:"links"`
-	Reddit   map[string]interface{} `json:"reddit"`
+type CustomLaunchData struct {
+	Name         string `json:"name"`
+	Rocket       string `json:"rocket"`
+	Links        Reddit `json:"reddit"`
+	Success      bool   `json:"success"`
+	FlightNumber int    `json:"flight_number"`
 }
 
 // New creates a new server for Launches
 func New() *LaunchServer {
-	return &LaunchServer{launches: make(map[string]LaunchSpecs)}
+	return &LaunchServer{launches: make(map[string]CustomLaunchData)}
 }
 
 func (s *LaunchServer) HandleGetLaunches(w http.ResponseWriter, r *http.Request) {
-
-	err := GetSpaceXLaunches()
+	launches, err := GetSpaceXLaunches()
 	if err != nil {
-		slog.Error("couldn't get space launches", err)
-		return
-	}
-	file, err := os.Open("writtendata.json")
-	if err != nil {
-		slog.Error("Couldn't read the file. You sure it's there? ", err)
-		return
-	}
-	defer file.Close()
-	_, err = io.Copy(w, file)
-	if err != nil {
-		slog.Error("Issue with copying file", err)
+		slog.Error("Could't get launches", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError) // 500
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(launches); err != nil {
+		slog.Error("Failed to send launches", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError) // 500
+		return
+	}
+
+	ptyJson, err := json.MarshalIndent(launches, "", "") // 4 space indent
+	if err != nil {
+		slog.Error("Failed to prettify this", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("%s\n", ptyJson)
+}
+
+func (s *LaunchServer) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.Request) {
+	servErr := func(err error) error {
+		if err != nil {
+			slog.Error("couldn't read body", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return nil
+	}
+
+	launches, err := GetSpaceXLaunches()
+	servErr(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(launches)
+	servErr(err)
+
+	pj, err := json.MarshalIndent(launches, "", "    ")
+	servErr(err)
+
+	fmt.Printf("%s\n", pj)
+}
+
+// ###############
+type Launch struct {
+	date_utc string
+	// Fairings string                 `json:"fairings"`
+	Links  map[string]interface{} `json:"links"`
+	Reddit map[string]interface{} `json:"reddit"`
 }
 
 // All the crud operations
-func GetSpaceXLaunches() error {
-	res, err := http.Get("https://api.spacexdata.com/v5/launches/upcoming")
-	if err != nil {
-		slog.Error("Something happened when requesting the launches", err)
-		return err
+func GetSpaceXLaunches() ([]CustomLaunchData, error) {
+
+	checkErr := func(err error) error {
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-	slog.Info("couldn't read", res)
+
+	res, err := http.Get("https://api.spacexdata.com/v5/launches/upcoming")
+	checkErr(err)
+
 	defer res.Body.Close()
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		slog.Error("Couldn't read body", err)
-		return err
-	}
+	var launches []CustomLaunchData
+	err = json.NewDecoder(res.Body).Decode(&launches)
+	checkErr(err)
 
-	err = os.WriteFile("writtendata.json", body, 0644)
-	if err != nil {
-		slog.Error("Error writing to file", err)
-		return err
-	}
-	return nil
+	return launches, err
 }
+
+// ############

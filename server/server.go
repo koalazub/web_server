@@ -12,7 +12,10 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// do I need this to be moved to a template?
+
 var indexPage = `<!DOCTYPE html>
+
 	<html>
 		<body>
 			<h1 style="text-align:center;"> Oooohh look at disssss!</h1>
@@ -128,6 +131,7 @@ func RunServer() {
 	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
 	r.HandleFunc("/users/create", srv.HandleCreateUser)
 	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
+	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
 	s := &http.Server{
 		Addr:           addr + port,
 		Handler:        r,

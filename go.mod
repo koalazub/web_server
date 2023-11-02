@@ -1,6 +1,6 @@
 module github.com/web-server
 
-go 1.20
+go 1.21.3
 
 require (
 	github.com/gorilla/mux v1.8.0
