@@ -20,6 +20,7 @@ type LaunchSpecs struct {
 	Reddit   map[string]interface{} `json:"reddit"`
 }
 
+// New creates a new server for Launches
 func New() *LaunchServer {
 	return &LaunchServer{launches: make(map[string]LaunchSpecs)}
 }

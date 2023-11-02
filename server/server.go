@@ -3,9 +3,12 @@ package server
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/web-server/api"
 	"golang.org/x/exp/slog"
 )
 
@@ -33,6 +36,7 @@ type UserInfo struct {
 	diabolicaltendencies int
 }
 
+// New generates a new server with empty users
 func New() *Server {
 	return &Server{users: make(map[string]UserInfo)}
 }
@@ -110,4 +114,28 @@ func (s *Server) HandleReadUsers(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func RunServer() {
+
+	r := mux.NewRouter()
+	srv := New()
+	lsrv := api.New()
+	port := ":8008"
+	addr := "67.219.102.52"
+
+	r.HandleFunc("/", srv.HandleIndex)
+	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
+	r.HandleFunc("/users/create", srv.HandleCreateUser)
+	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
+	s := &http.Server{
+		Addr:           addr + port,
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	log.Printf("Server: %v:%v", addr, port)
+	slog.Error("Error launching serve: ", s.ListenAndServe())
 }

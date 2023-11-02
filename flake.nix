@@ -15,7 +15,7 @@
       ];
       perSystem = {pkgs, system, self', inputs', config, ... }: {
         devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [go_1_21 gopls go-tools gotools];
+          nativeBuildInputs = with pkgs; [go_1_21 gopls go-tools gotools hurl];
         };
       };
     };
