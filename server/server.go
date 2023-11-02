@@ -129,11 +129,11 @@ func (s *Server) HandleReadUsers(w http.ResponseWriter, r *http.Request) {
 
 func RunServer() {
 
+	server_env := addr + port
+
 	r := mux.NewRouter()
 	srv := New()
 	lsrv := api.New()
-	port := ""
-	addr := ""
 
 	r.HandleFunc("/", srv.HandleIndex)
 	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
@@ -148,7 +148,7 @@ func RunServer() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Server: %v:%v", addr, port)
+	log.Printf("Server: %v", server_env)
 	slog.Error("Error launching serve: ", s.ListenAndServe())
 }
 
