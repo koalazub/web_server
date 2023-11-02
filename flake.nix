@@ -22,7 +22,7 @@
             go-tools 
             gotools 
             hurl 
-            (templ.packages.${system}.templ)
+            # (templ.packages.${system}.templ)
           ];
         };
       };
