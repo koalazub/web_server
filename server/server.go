@@ -5,12 +5,20 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/web-server/api"
 	"golang.org/x/exp/slog"
 )
+
+var addr, port string
+
+func init() {
+	loadEnv()
+}
 
 // do I need this to be moved to a template?
 
@@ -124,8 +132,8 @@ func RunServer() {
 	r := mux.NewRouter()
 	srv := New()
 	lsrv := api.New()
-	port := ":8008"
-	addr := "67.219.102.52"
+	port := ""
+	addr := ""
 
 	r.HandleFunc("/", srv.HandleIndex)
 	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
@@ -142,4 +150,20 @@ func RunServer() {
 
 	log.Printf("Server: %v:%v", addr, port)
 	slog.Error("Error launching serve: ", s.ListenAndServe())
+}
+
+func loadEnv() {
+	if err := godotenv.Load(); err != nil {
+		slog.Error("Error loading .env file. Is it there?", err)
+		return
+	}
+
+	addr = os.Getenv("host_addr")
+	port = os.Getenv("host_port")
+
+	if os.Getenv("host_addr") == "" || os.Getenv("host_port") == "" {
+		slog.Error("Couldn't load env variables. Is the file present?")
+		return
+	}
+
 }
