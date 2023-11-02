@@ -22,16 +22,6 @@ func init() {
 
 // do I need this to be moved to a template?
 
-var indexPage = `<!DOCTYPE html>
-
-	<html>
-		<body>
-			<h1 style="text-align:center;"> Oooohh look at disssss!</h1>
-			<p style="text-align:center;"> Oooohh look at disssss!</p>
-		</ body>
-	</ html>
-	`
-
 type Server struct {
 	users map[string]UserInfo //key -> username
 }
