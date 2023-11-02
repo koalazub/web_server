@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"golang.org/x/exp/slog"
@@ -73,14 +74,13 @@ func (s *LaunchServer) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.
 	launches, err := GetSpaceXLaunches()
 	servErr(err)
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(launches)
+	tmpl, err := template.ParseFiles("templates/launches.templ")
 	servErr(err)
 
-	pj, err := json.MarshalIndent(launches, "", "    ")
+	err = tmpl.Execute(w, map[string]interface{}{
+		"Launches": launches,
+	})
 	servErr(err)
-
-	fmt.Printf("%s\n", pj)
 }
 
 // ###############
@@ -94,23 +94,20 @@ type Launch struct {
 // All the crud operations
 func GetSpaceXLaunches() ([]CustomLaunchData, error) {
 
-	checkErr := func(err error) error {
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	res, err := http.Get("https://api.spacexdata.com/v5/launches/upcoming")
-	checkErr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	defer res.Body.Close()
 
 	var launches []CustomLaunchData
 	err = json.NewDecoder(res.Body).Decode(&launches)
-	checkErr(err)
+	if err != nil {
+		return nil, err
+	}
 
-	return launches, err
+	return launches, nil
 }
 
 // ############

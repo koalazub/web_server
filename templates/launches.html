@@ -6,13 +6,13 @@
 </head>
 <body>
     <h1>Upcoming SpaceX Launches</h1>
-    <h2> FUCKEN LES GOOOOO</h2>
     {{ if .Launches }}
     <ul>
         {{ range .Launches }}
         <li>
             <strong>Mission:</strong> {{ .Name }}<br>
-            <div>potato</div>
+            <strong>Date:</strong> {{ .DateLocal }}<br>
+            <strong>Details:</strong> {{ .Details }}
         </li>
         {{ end }}
     </ul>

@@ -45,7 +45,7 @@ func New() *Server {
 func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(indexPage))
+	// w.Write([]byte(indexPage))
 }
 
 func (s *Server) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func RunServer() {
 	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
 	r.HandleFunc("/users/create", srv.HandleCreateUser)
 	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
-	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
+	r.HandleFunc("/launches/custom", lsrv.HandleGetCustomLaunchData)
 	s := &http.Server{
 		Addr:           addr + port,
 		Handler:        r,
