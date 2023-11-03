@@ -22,6 +22,7 @@
             go-tools 
             gotools 
             hurl 
+            turso-cli
             # (templ.packages.${system}.templ)
           ];
         };
