@@ -23,6 +23,7 @@
             gotools 
             hurl 
             turso-cli
+            vscode-langservers-extracted
             # (templ.packages.${system}.templ)
           ];
         };

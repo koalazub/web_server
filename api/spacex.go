@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -51,15 +50,6 @@ func (s *LaunchServer) HandleGetLaunches(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "internal server error", http.StatusInternalServerError) // 500
 		return
 	}
-
-	ptyJson, err := json.MarshalIndent(launches, "", "") // 4 space indent
-	if err != nil {
-		slog.Error("Failed to prettify this", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Printf("%s\n", ptyJson)
 }
 
 func (s *LaunchServer) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.Request) {

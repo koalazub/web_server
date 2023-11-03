@@ -33,12 +33,32 @@ func loadEnv() {
 
 }
 
+func StartDatabase() *sql.DB {
+	db := InitDatabase()
+	err := InitTable(db)
+	if err != nil {
+		slog.Error("Couldn't start database")
+		return nil
+	}
+
+	return db
+}
+
 func InitDatabase() *sql.DB {
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open db %v: %v", dbUrl, err)
 		os.Exit(1)
 	}
-
 	return db
+}
+
+func InitTable(db *sql.DB) error {
+	_, err := db.Exec("create table if not exists spacex (id INT, name varchar(255), rocket varchar(255), links json, success boolean, flight_number int)")
+	if err != nil {
+		slog.Error("error initialising table", err)
+		return err
+	}
+
+	return nil
 }

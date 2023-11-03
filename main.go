@@ -1,9 +1,11 @@
 package main
 
 import (
-	s "github.com/web-server/server"
+	d "github.com/koalazub/web-server/database"
+	s "github.com/koalazub/web-server/server"
 )
 
 func main() {
 	s.RunServer()
+	d.StartDatabase()
 }

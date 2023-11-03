@@ -1,8 +1,7 @@
 package server
 
 import (
-	"encoding/json"
-	"io"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/web-server/api"
+	"github.com/koalazub/web-server/api"
 	"golang.org/x/exp/slog"
 )
 
@@ -19,8 +18,6 @@ var addr, port string
 func init() {
 	loadEnv()
 }
-
-// do I need this to be moved to a template?
 
 type Server struct {
 	users map[string]UserInfo //key -> username
@@ -43,77 +40,18 @@ func New() *Server {
 }
 
 func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("content-type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	// w.Write([]byte(indexPage))
-}
-
-func (s *Server) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	name := params["name"]
-	switch r.Method {
-	case http.MethodPost, http.MethodPut:
-		if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-			return
-		}
-
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			slog.Error("Couldn't read req body:", err, 3)
-			w.WriteHeader(http.StatusInternalServerError) // 500
-			return
-		}
-		defer r.Body.Close()
-
-		var u User
-		err = json.Unmarshal(body, &u)
-		if err != nil {
-			slog.Error("Couldn't unmarshal reqt body: %v ", err)
-			w.WriteHeader(http.StatusBadRequest) // 400
-			return
-		}
-
-		slog.Info("Created User:", u.Name, 0)
-		s.users[u.Name] = UserInfo{
-			starsign:             u.Starsign,
-			diabolicaltendencies: u.Diabolicaltendencies,
-		}
-	case http.MethodDelete:
-		delete(s.users, name)
-		slog.Info("Deleting user:", name)
-
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed) // 415
+	tmpl, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		slog.Error("Internal server error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError) // 500
+		return
 	}
-}
 
-func (s *Server) HandleReadUsers(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		// Fetch from query strin
-		name := r.URL.Query().Get("name")
-		u, ok := s.users[name]
-		if !ok {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		ret := User{
-			Name:                 name,
-			Starsign:             u.starsign,
-			Diabolicaltendencies: u.diabolicaltendencies,
-		}
-		msg, err := json.Marshal(ret)
-		if err != nil {
-			slog.Error("couldn't marshall:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(msg)
-
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	err = tmpl.Execute(w, "")
+	if err != nil {
+		slog.Error("Internal server error", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError) // 500
+		return
 	}
 }
 
@@ -126,10 +64,8 @@ func RunServer() {
 	lsrv := api.New()
 
 	r.HandleFunc("/", srv.HandleIndex)
-	r.HandleFunc("/users/{name}", srv.HandleReadUsers)
-	r.HandleFunc("/users/create", srv.HandleCreateUser)
 	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
-	r.HandleFunc("/launches/custom", lsrv.HandleGetCustomLaunchData)
+	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
 	s := &http.Server{
 		Addr:           addr + port,
 		Handler:        r,

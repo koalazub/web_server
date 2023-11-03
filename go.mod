@@ -1,4 +1,4 @@
-module github.com/web-server
+module github.com/koalazub/web-server
 
 go 1.21
 
