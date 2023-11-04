@@ -91,5 +91,4 @@ func loadEnv() {
 		slog.Error("Couldn't load env variables. Is the file present?")
 		return
 	}
-
 }

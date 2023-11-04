@@ -11,7 +11,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-var auth, dbUrl string
+var tursoAuth, tursoUrl, databaseUrl string
 
 func init() {
 	loadEnv()
@@ -23,10 +23,10 @@ func loadEnv() {
 		return
 	}
 
-	auth = os.Getenv("libsql_auth_token")
-	dbUrl = os.Getenv("libsql_url")
+	tursoAuth = os.Getenv("turso_auth_token")
+	tursoUrl = os.Getenv("turso_url")
 
-	if os.Getenv("libsql_auth_token") == "" || os.Getenv("libsql_url") == "" {
+	if os.Getenv("turso_auth_token") == "" || os.Getenv("turso_url") == "" {
 		slog.Error("Couldn't load database env variables. Is the file present?")
 		return
 	}
@@ -41,15 +41,19 @@ func StartDatabase() *sql.DB {
 		return nil
 	}
 
+	slog.Info("Database successfyully started")
 	return db
 }
 
 func InitDatabase() *sql.DB {
-	db, err := sql.Open("libsql", dbUrl)
+	databaseUrl = fmt.Sprintf("libsql://%s?authToken=%s", tursoUrl, tursoAuth)
+
+	db, err := sql.Open("libsql", databaseUrl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to open db %v: %v", dbUrl, err)
+		slog.Error("failed to open database", "url", tursoUrl, "error", err)
 		os.Exit(1)
 	}
+
 	return db
 }
 
@@ -60,5 +64,16 @@ func InitTable(db *sql.DB) error {
 		return err
 	}
 
+	slog.Info("table initialised")
 	return nil
+}
+
+func Read(db *sql.DB, query string, args ...interface{}) (*sql.Rows, error) {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		slog.Error("couldn't make the query ", err)
+		return nil, err
+	}
+
+	return rows, nil
 }

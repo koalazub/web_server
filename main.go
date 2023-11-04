@@ -6,6 +6,8 @@ import (
 )
 
 func main() {
+	db := d.StartDatabase()
+	defer db.Close()
+
 	s.RunServer()
-	d.StartDatabase()
 }
