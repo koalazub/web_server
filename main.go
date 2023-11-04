@@ -9,5 +9,5 @@ func main() {
 	db := d.StartDatabase()
 	defer db.Close()
 
-	s.RunServer()
+	s.RunServer(db)
 }

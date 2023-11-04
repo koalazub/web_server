@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"html/template"
 	"log"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/koalazub/web-server/api"
+	a "github.com/koalazub/web-server/api"
 	"golang.org/x/exp/slog"
 )
 
@@ -20,23 +21,14 @@ func init() {
 }
 
 type Server struct {
-	users map[string]UserInfo //key -> username
+	DB *sql.DB
 }
 
-type User struct {
-	Name                 string `json:"name"`
-	Starsign             string `json:"starsign"`
-	Diabolicaltendencies int    `json:"diabolicaltendencies"`
-}
-
-type UserInfo struct {
-	starsign             string
-	diabolicaltendencies int
-}
-
-// New generates a new server with empty users
-func New() *Server {
-	return &Server{users: make(map[string]UserInfo)}
+// Server spins up with an initalised database
+func New(db *sql.DB) *Server {
+	return &Server{
+		DB: db,
+	}
 }
 
 func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
@@ -55,17 +47,12 @@ func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RunServer() {
+func RunServer(db *sql.DB) {
 
 	server_env := addr + port
 
 	r := mux.NewRouter()
-	srv := New()
-	lsrv := api.New()
-
-	r.HandleFunc("/", srv.HandleIndex)
-	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
-	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
+	handlers(db, r)
 	s := &http.Server{
 		Addr:           addr + port,
 		Handler:        r,
@@ -76,6 +63,40 @@ func RunServer() {
 
 	log.Printf("Server: %v", server_env)
 	slog.Error("Error launching serve: ", s.ListenAndServe())
+}
+
+func handlers(db *sql.DB, r *mux.Router) {
+	srv := New(db)
+	lsrv := a.New()
+	r.HandleFunc("/", srv.HandleIndex)
+	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
+	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
+	r.HandleFunc("/launches/database", srv.HandleGetDatabaseLaunches)
+}
+
+// Reaches into Server to get access to DB
+func (s *Server) HandleGetDatabaseLaunches(w http.ResponseWriter, r *http.Request) {
+	launches, err := a.GetDatabaseLaunches(s.DB)
+	if err != nil {
+		slog.Error("Could't get launch info", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError) // 500
+		return
+	}
+
+	t, err := template.ParseFiles("templates/launches.templ")
+	if err != nil {
+
+		slog.Error("couldn't read from template", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	err = t.Execute(w, map[string]interface{}{"Launches": launches})
+	if err != nil {
+		slog.Error("couldn't execute file from template", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
+
 }
 
 func loadEnv() {

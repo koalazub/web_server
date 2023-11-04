@@ -16,11 +16,16 @@
       ];
       perSystem = {pkgs, system, self', inputs', config, ... }: {
         devShells.default = pkgs.mkShell {
+        shellHook = ''  
+        export GOPATH=$HOME/go
+        export PATH=$PATH:$GOPATH/bin
+        '';
           nativeBuildInputs = with pkgs; [
             go_1_21 
             gopls 
             go-tools 
             gotools 
+            air
             hurl 
             turso-cli
             vscode-langservers-extracted

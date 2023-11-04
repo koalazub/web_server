@@ -1,14 +1,16 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"html/template"
 	"net/http"
 
+	d "github.com/koalazub/web-server/database"
 	"golang.org/x/exp/slog"
 )
 
-type LaunchServer struct {
+type CustomLaunch struct {
 	launches map[string]CustomLaunchData
 }
 
@@ -21,9 +23,9 @@ type Links struct {
 	Reddit Reddit
 }
 
-// just the basics for now and then we'll see if we can elaborate more.
-// Specs need to be updated from map[string]interface{} at some point
+// For Turso db
 type CustomLaunchData struct {
+	ID           int    `json:"id"`
 	Name         string `json:"name"`
 	Rocket       string `json:"rocket"`
 	Links        Reddit `json:"reddit"`
@@ -32,11 +34,11 @@ type CustomLaunchData struct {
 }
 
 // New creates a new server for Launches
-func New() *LaunchServer {
-	return &LaunchServer{launches: make(map[string]CustomLaunchData)}
+func New() *CustomLaunch {
+	return &CustomLaunch{launches: make(map[string]CustomLaunchData)}
 }
 
-func (s *LaunchServer) HandleGetLaunches(w http.ResponseWriter, r *http.Request) {
+func (s *CustomLaunch) HandleGetLaunches(w http.ResponseWriter, r *http.Request) {
 	launches, err := GetSpaceXLaunches()
 	if err != nil {
 		slog.Error("Could't get launches", err)
@@ -52,7 +54,7 @@ func (s *LaunchServer) HandleGetLaunches(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (s *LaunchServer) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.Request) {
+func (s *CustomLaunch) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.Request) {
 	servErr := func(err error) error {
 		if err != nil {
 			slog.Error("couldn't read body", err)
@@ -73,7 +75,6 @@ func (s *LaunchServer) HandleGetCustomLaunchData(w http.ResponseWriter, r *http.
 	servErr(err)
 }
 
-// ###############
 type Launch struct {
 	date_utc string
 	// Fairings string                 `json:"fairings"`
@@ -82,7 +83,7 @@ type Launch struct {
 }
 
 // All the crud operations
-func GetSpaceXLaunches() ([]CustomLaunchData, error) {
+func GetSpaceXLaunches() ([]Launch, error) {
 
 	res, err := http.Get("https://api.spacexdata.com/v5/launches/upcoming")
 	if err != nil {
@@ -91,7 +92,7 @@ func GetSpaceXLaunches() ([]CustomLaunchData, error) {
 
 	defer res.Body.Close()
 
-	var launches []CustomLaunchData
+	var launches []Launch
 	err = json.NewDecoder(res.Body).Decode(&launches)
 	if err != nil {
 		return nil, err
@@ -100,4 +101,33 @@ func GetSpaceXLaunches() ([]CustomLaunchData, error) {
 	return launches, nil
 }
 
-// ############
+func GetDatabaseLaunches(db *sql.DB) ([]CustomLaunchData, error) {
+	qry := "SELECT id, name, rocket, success, flight_number from spacex"
+
+	rows, err := d.Read(db, qry)
+	if err != nil {
+		slog.Error("Couldn't query the database for launches: ", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var launches []CustomLaunchData
+	for rows.Next() {
+		var l CustomLaunchData
+		if err := rows.Scan(&l.ID, &l.Name, &l.Rocket, &l.Success, &l.FlightNumber); err != nil {
+			slog.Error("Error scanning row. Are you querying correctly?\n", err)
+			return nil, err
+		}
+
+		launches = append(launches, l)
+	}
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Error iterating rows: ", err)
+		return nil, err
+	}
+
+	return launches, nil
+
+}

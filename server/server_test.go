@@ -1,17 +1,14 @@
 package server
 
 import (
-	"reflect"
+	d "github.com/koalazub/web-server/database"
 	"testing"
 )
-//
-func TestNew(t *testing.T) {
-	got := New()
-	want := &Server{
-		users: make(map[string]UserInfo),
-	}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Got %v, want %v", got.users, want.users)
+func TestNew(t *testing.T) {
+	db := d.InitDatabase()
+	got := New(db)
+	if got.DB == nil {
+		t.Errorf("New() did not initialise a new server with a db")
 	}
 }

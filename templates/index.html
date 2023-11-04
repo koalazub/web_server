@@ -4,12 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <title>SpaceX Launch Stuff</title>
+  <style>
+    ul {
+      list-style-type: : none;
+      margin: 0;
+      padding: 0;
+    }
+
+    ulbutton {
+      display: inline-block;
+      margin-right: 1rem;
+      text-decoration: none;
+      padding: 1rem 1.5rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.4s ease;
+    }
+
+    ul .button.hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 
 <body>
   <ul>
-    <a href="/launches/upcoming/all" class="button"> Check out the filtered stuff? </a>
-    <a href="/launches/upcoming" class="button">Raw SpaceX</a>
+    <li> <a href="/launches/upcoming/all" class="button"> Check out the filtered stuff? </a></li>
+    <li> <a href="/launches/upcoming" class="button">Raw SpaceX</a></li>
+    <li> <a href="/launches/database" class="button">Fetch from db</a></li>
   </ul>
 </body>
 
