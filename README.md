@@ -35,12 +35,12 @@ Using `Turso` and `libsql` for the creation of the database along with some logi
 	- an `.env` file with connections that match the global constant variables for connections to be made
 		So:
 
-			- [ ] `host_addr`
-			- [ ] `host_port`
-			- [ ] `turso_auth_token`
-			- [ ] `turso_url`
+- [ ] `host_addr`
+- [ ] `host_port`
+- [ ] `turso_auth_token`
+- [ ] `turso_url`
 
-	- a `libsql/sqlite` database that's created locally and that connects to the correct address(default is usually `127.0.0.1:8080`)
+- a `libsql/sqlite` database that's created locally and that connects to the correct address(default is usually `127.0.0.1:8080`)
 
 
 ## Building
