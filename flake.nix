@@ -7,21 +7,7 @@
     templ.url = "github:a-h/templ";
   };
 
-  outputs = inputs@{nixpkgs, flake-parts, templ, ...}:
-    let
-      buildGoProject = pkgs: with pkgs; buildGoModule {
-        # Specify additional attributes for your Go project build
-        pname = "your-project-name";
-        version = "your-project-version";
-        src = ./.;  # assuming your Go project's source code is in the same directory as this flake file
-        vendorSha256 = null;  # set this to the correct hash for your project's vendor directory
-        nativeBuildInputs = with pkgs; [
-          go_1_21
-          go-tools
-        ];
-      };
-    in
-      flake-parts.lib.mkFlake { inherit inputs; }{
+  outputs = inputs@{nixpkgs, flake-parts, templ, ...}: flake-parts.lib.mkFlake { inherit inputs; }{
         systems = [
           "x86_64-linux"
           "x86_64-darwin"
@@ -41,6 +27,30 @@
               vscode-langservers-extracted
               # (templ.packages.${system}.templ)
             ];
+          };
+
+          packages.staging = pkgs.buildGoModule rec {
+            pname = "web_server";
+            version = "0.5.0";
+            src = ./.;
+            vendorSha256 = null;
+            fullName = "${pname}-${version}";
+
+            nativeBuildInputs = with pkgs; [  
+              go_1_21
+              go-tools
+            ];  
+            preBuild = ''
+              go mod vendor
+              go mod tidy 
+            '';
+            testPhase = ''
+              go test ./...
+            '';
+            buildPhase = ''
+              go build -o results ./ 
+            ''; 
+            
           };
         };
       };
