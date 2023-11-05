@@ -23,5 +23,5 @@ writtendata.json
 *.hurl
 .env
 tmp/
-result
 result/
+result

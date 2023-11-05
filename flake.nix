@@ -39,18 +39,8 @@
             nativeBuildInputs = with pkgs; [  
               go_1_21
               go-tools
+              gotools
             ];  
-            preBuild = ''
-              go mod vendor
-              go mod tidy 
-            '';
-            testPhase = ''
-              go test ./...
-            '';
-            buildPhase = ''
-              go build -o results ./ 
-            ''; 
-            
           };
         };
       };
