@@ -33,8 +33,8 @@
             pname = "web_server";
             version = "0.5.0";
             src = ./.;
-            vendorSha256 = null;
             fullName = "${pname}-${version}";
+            vendorSha256 = null;
 
             nativeBuildInputs = with pkgs; [  
               go_1_21
