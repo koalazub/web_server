@@ -70,7 +70,7 @@ func handlers(db *sql.DB, r *mux.Router) {
 	lsrv := a.New()
 	r.HandleFunc("/", srv.HandleIndex)
 	r.HandleFunc("/launches/upcoming", lsrv.HandleGetLaunches)
-	r.HandleFunc("/launches/upcoming/all", lsrv.HandleGetCustomLaunchData)
+	r.HandleFunc("/launches/custom", lsrv.HandleGetCustomLaunchData)
 	r.HandleFunc("/launches/database", srv.HandleGetDatabaseLaunches)
 }
 
