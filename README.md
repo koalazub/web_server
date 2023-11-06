@@ -2,6 +2,9 @@
 
 > Go version:  1.21
 
+<img src="https://github.com/koalazub/web_server/assets/7111524/92ebcbd2-628f-49d2-ac6e-7dfd8639cd2f" width="480"/>
+
+
 ## Installation
 
 Best to use `nix`, but can use `go cli`. 
